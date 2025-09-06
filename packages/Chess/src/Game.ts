@@ -60,6 +60,8 @@ export class ChessGame {
     return whitePieces.includes(piece);
   }
 
+ 
+
   // ================== MOVE GENERATORS ==================
 
   private movesOfRook(x: number, y: number, isWhite: boolean): Move[] {
@@ -200,7 +202,7 @@ export class ChessGame {
 
   // ================== API ==================
 
-  getMoves(x: number, y: number, playerId: string): Move[] {
+ getMoves(x: number, y: number, playerId: string): Move[] {
     if (x < 0 || x > 7 || y < 0 || y > 7) return [];
     const piece = this.state.board[x]?.[y] ?? "";
     if (!piece) return [];
