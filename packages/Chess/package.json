@@ -1,0 +1,28 @@
+{
+  "name": "@repo/chess",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "./Game": {
+      "require": "./dist/Game.js",
+      "import": "./dist/Game.js",
+      "types": "./dist/Game.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1"
+  }
+}

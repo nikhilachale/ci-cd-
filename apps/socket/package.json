@@ -19,6 +19,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@types/ws": "^8.18.1"
+    "@types/ws": "^8.18.1",
+    "@repo/chess":"workspace:*"
   }
 }
