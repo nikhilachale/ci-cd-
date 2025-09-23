@@ -1,30 +1,29 @@
 "use client";
 
-interface Props {
-  roomName: string;
-  setRoomName: (name: string) => void;
-  socket: WebSocket | null;
-}
+import { useChessStore } from "../store/chessStore";
 
-export default function RoomControls({ roomName, setRoomName, socket }: Props) {
+
+export default function RoomControls() {
+  const { roomName, setRoomName, socket } = useChessStore();
+
+  const handleCreateRoom = () => {
+    socket?.send(JSON.stringify({ type: "create_room" }));
+  };
+
   return (
-    <div className="flex items-center space-x-2   ">
+    <div className="flex flex-row gap-4 w-full">
       <input
         type="text"
         value={roomName}
         onChange={(e) => setRoomName(e.target.value)}
-        className="rounded-full px-4 py-2 text-amber-900 shadow focus:outline-none focus:ring-2 focus:ring-blue-400 border border-amber-300 transition"
-        placeholder="Enter room name"
+        placeholder="Enter room name..."
+        className="w-full px-4 py-2 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
       />
       <button
-        onClick={() => {
-          if (socket && roomName) {
-            socket.send(JSON.stringify({ type: "join_room", roomName }));
-          }
-        }}
-        className="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-6 py-2 rounded-full shadow transition-colors duration-200"
+        onClick={handleCreateRoom}
+        className="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-200"
       >
-        Join
+        Create Room
       </button>
     </div>
   );

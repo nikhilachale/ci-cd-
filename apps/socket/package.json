@@ -16,10 +16,12 @@
   "dependencies": {
     "@repo/typescript-config": "workspace:*",
     "crypto": "^1.0.1",
+    "uuid": "^13.0.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@types/ws": "^8.18.1",
-    "@repo/chess":"workspace:*"
+    "@repo/chess": "workspace:*",
+    "@types/uuid": "^11.0.0",
+    "@types/ws": "^8.18.1"
   }
 }

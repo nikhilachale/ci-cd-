@@ -7,6 +7,7 @@ const games: Record<string, ChessGame> = {};
 const wss = new WebSocketServer({ port: 8080 });
 
 wss.on('connection', function connection(ws) {
+  console.log('A new client connected!');
   ws.on('error', console.error);
   ws.on('message', function message(parsedData) {
     const data = JSON.parse(parsedData.toString());
@@ -25,29 +26,39 @@ wss.on('connection', function connection(ws) {
       return;
     }
 
-    if (data.type === "join_room") {
-      const roomId = data.roomName;
-      const playerId = data.playerId || "black";
-      const game = games[roomId];
-      if (!game) {
-        ws.send(JSON.stringify({
-          type: "error",
-          message: "Room does not exist",
-        }));
-        return;
-      }
-      // Add player if not already in list
-      if (!game.state.players.includes(playerId)) {
-        game.state.players.push(playerId);
-      }
-      ws.send(JSON.stringify({
-        type: "room_joined",
-        game: game.state,
-        id: playerId,
-        roomName: roomId,
-      }));
-      return;
-    }
+   if (data.type === "join_room") {
+  const roomId = data.roomName;
+  const playerId = data.playerId; // preserve the original color/id
+  const game = games[roomId];
+  if (!game) {
+    ws.send(JSON.stringify({
+      type: "error",
+      message: "Room does not exist",
+    }));
+    return;
+  }
+
+  if (!playerId) {
+    ws.send(JSON.stringify({
+      type: "error",
+      message: "Missing playerId",
+    }));
+    return;
+  }
+
+  // Add player if not already in list
+  if (!game.state.players.includes(playerId)) {
+    game.state.players.push(playerId);
+  }
+
+  ws.send(JSON.stringify({
+    type: "room_joined",
+    game: game.state,
+    id: playerId,
+    roomName: roomId,
+  }));
+  return;
+}
 
     if (data.type === 'can_move') {
       const roomId = data.roomName;
