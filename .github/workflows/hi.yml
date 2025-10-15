@@ -1,29 +1,34 @@
 name: GitHub Actions Demo
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on: 
-push:
-  branches:
-    - main
+  push:
+    branches:
+      - main
 jobs:
-
-
   Redeploy:
     runs-on: ubuntu-latest
-    name: Redeploy evrything to production
+    name: Redeploy everything to production
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: ssh to server and deploy
-        run: | 
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" &> ~/ssh_key
-          ssh -i ~/ssh_key ec2-user@3.110.54.252
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H 3.110.54.252 >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@3.110.54.252 << 'EOF'
           cd ci-cd-
           git pull origin main
           pnpm install
           pnpm build
           pm2 restart all
+          EOF
         
 
       
