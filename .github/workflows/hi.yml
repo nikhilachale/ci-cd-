@@ -15,19 +15,44 @@ jobs:
 
       - name: Setup SSH key
         run: |
+          echo "Setting up SSH directory..."
           mkdir -p ~/.ssh
+          echo "SSH directory created successfully"
+          
+          echo "Writing SSH private key..."
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          
+          echo "Setting SSH key permissions..."
           chmod 600 ~/.ssh/deploy_key
+          
+          echo "Adding server to known hosts..."
           ssh-keyscan -H 3.110.54.252 >> ~/.ssh/known_hosts
+          
+          echo "SSH setup completed successfully"
 
       - name: Deploy to server
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@3.110.54.252 << 'EOF'
+          echo "Connecting to server..."
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=30 ec2-user@3.110.54.252 << 'EOF'
+          set -e
+          echo "Connected to server successfully"
+          
+          echo "Navigating to project directory..."
           cd ci-cd-
+          
+          echo "Pulling latest changes..."
           git pull origin main
+          
+          echo "Installing dependencies..."
           pnpm install
+          
+          echo "Building project..."
           pnpm build
+          
+          echo "Restarting applications..."
           pm2 restart all
+          
+          echo "Deployment completed successfully!"
           EOF
         
 
