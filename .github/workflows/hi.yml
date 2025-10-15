@@ -8,6 +8,7 @@ jobs:
 
 
   Redeploy:
+    runs-on: ubuntu-latest
     name: Redeploy evrything to production
 
     steps:
