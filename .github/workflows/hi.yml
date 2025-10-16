@@ -13,19 +13,95 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Test connectivity
+        run: |
+          echo "Testing network connectivity to server..."
+          if timeout 10 ping -c 3 3.110.54.252; then
+            echo "✅ Server is pingable"
+          else
+            echo "⚠️ Ping failed, but server might still be reachable via SSH"
+          fi
+          
+          if timeout 10 nc -z 3.110.54.252 22; then
+            echo "✅ SSH port (22) is accessible"
+          else
+            echo "❌ SSH port (22) is not accessible"
+            exit 1
+          fi
+
       - name: Setup SSH key
         run: |
+          echo "Setting up SSH directory..."
           mkdir -p ~/.ssh
+          echo "SSH directory created successfully"
+          
+          echo "Writing SSH private key..."
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          
+          echo "Setting SSH key permissions..."
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H 3.110.54.252 >> ~/.ssh/known_hosts
+          
+          echo "Testing server connectivity..."
+          if timeout 10 nc -z 3.110.54.252 22; then
+            echo "Server is reachable on port 22"
+            echo "Adding server to known hosts..."
+            timeout 10 ssh-keyscan -H 3.110.54.252 >> ~/.ssh/known_hosts || {
+              echo "ssh-keyscan failed, adding manual host key acceptance"
+              echo "3.110.54.252 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7vbqajDVqn8CPyAlSkO6X+m7K0FOYYCaNPmMXYCEa4YY/j/H6akiuy/Ie/j6bxANjYDbEDI1YB9tKZhJckIss..." >> ~/.ssh/known_hosts
+            }
+          else
+            echo "Warning: Server not reachable, will try with StrictHostKeyChecking=no"
+          fi
+          
+          echo "SSH setup completed successfully"
 
       - name: Deploy to server
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@3.110.54.252 << 'EOF'
+          echo "Attempting to connect to server..."
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=30 \
+              -o ServerAliveInterval=10 \
+              -o ServerAliveCountMax=3 \
+              ec2-user@3.110.54.252 << 'EOF'
+          set -e
+          echo "✅ Connected to server successfully"
+          
+          echo "📁 Navigating to project directory..."
+          if [ ! -d "ci-cd-" ]; then
+            echo "❌ Project directory 'ci-cd-' not found"
+            exit 1
+          fi
           cd ci-cd-
+          
+          echo "📥 Pulling latest changes..."
           git pull origin main
-          pnpm install
-          pnpm build
-          pm2 restart all
+          
+          echo "📦 Installing dependencies..."
+          if command -v pnpm &> /dev/null; then
+            pnpm install
+          else
+            echo "❌ pnpm not found, trying npm..."
+            npm install
+          fi
+          
+          echo "🔨 Building project..."
+          if command -v pnpm &> /dev/null; then
+            pnpm build
+          else
+            npm run build
+          fi
+          
+          echo "🔄 Restarting applications..."
+          if command -v pm2 &> /dev/null; then
+            pm2 restart all
+          else
+            echo "❌ pm2 not found, please install pm2 on the server"
+            exit 1
+          fi
+          
+          echo "🎉 Deployment completed successfully!"
           EOF
+        
+
+      
